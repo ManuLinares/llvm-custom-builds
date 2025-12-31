@@ -61,24 +61,30 @@ esac
 cmake \
   -G Ninja \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_DISABLE_FIND_PACKAGE_LibXml2=TRUE \
   -DCMAKE_INSTALL_PREFIX="/" \
-  -DLLVM_ENABLE_PROJECTS="clang;lld" \
+  -DLLVM_ENABLE_PROJECTS="lld" \
   -DLLVM_ENABLE_ZLIB=OFF \
   -DLLVM_INCLUDE_DOCS=OFF \
   -DLLVM_ENABLE_ASSERTIONS=ON \
   -DLLVM_INCLUDE_EXAMPLES=OFF \
   -DLLVM_INCLUDE_TESTS=OFF \
-  -DLLVM_INCLUDE_TOOLS=ON \
+  -DLLVM_ENABLE_LIBXML2=0 \
+  -DLLVM_INCLUDE_BENCHMARKS=OFF \
+  -DLLVM_INCLUDE_TOOLS=OFF \
+  -DLLVM_ENABLE_RUNTIMES=compiler-rt \
+  -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
+  -DCOMPILER_RT_BUILD_BUILTINS=OFF \
   -DLLVM_INCLUDE_UTILS=OFF \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
-  -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV;WebAssembly;LoongArch" \
   "${CROSS_COMPILE}" \
   "${CMAKE_ARGUMENTS}" \
   ../llvm
 
 # Showtime!
-cmake --build . --config MinSizeRel
-DESTDIR=destdir cmake --install . --strip --config MinSizeRel
+cmake --build . --config RelWithDebInfo
+DESTDIR=destdir cmake --install . --strip --config RelWithDebInfo
+
 
 # move usr/bin/* to bin/ or llvm-config will be broken
 if [ ! -d destdir/bin ];then
