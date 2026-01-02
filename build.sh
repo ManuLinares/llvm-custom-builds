@@ -60,7 +60,7 @@ esac
 # Run `cmake` to configure the project.
 cmake \
   -G Ninja \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_BUILD_TYPE=MinSizeRel \
   -DCMAKE_DISABLE_FIND_PACKAGE_LibXml2=TRUE \
   -DCMAKE_INSTALL_PREFIX="/" \
   -DLLVM_ENABLE_PROJECTS="lld" \
@@ -69,7 +69,7 @@ cmake \
   -DLLVM_INCLUDE_DOCS=OFF \
   -DLLVM_BUILD_TESTS=OFF \
   -DLLVM_BUILD_LLVM_DYLIB=OFF \
-  -DLLVM_ENABLE_ASSERTIONS=ON \
+  -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_INCLUDE_EXAMPLES=OFF \
   -DLLVM_INCLUDE_TESTS=OFF \
   -DLLVM_ENABLE_LIBXML2=0 \
@@ -86,8 +86,8 @@ cmake \
   ../llvm
 
 # Showtime!
-cmake --build . --config RelWithDebInfo
-DESTDIR=destdir cmake --install . --strip --config RelWithDebInfo
+cmake --build . --config MinSizeRel
+DESTDIR=destdir cmake --install . --strip --config MinSizeRel
 
 
 # move usr/bin/* to bin/ or llvm-config will be broken
