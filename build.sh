@@ -67,7 +67,7 @@ cmake \
   -DLLVM_ENABLE_ZLIB=ON \
   -DLLVM_USE_STATIC_ZLIB=ON \
   -DLLVM_ENABLE_ZSTD=OFF \
-  -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV;WebAssembly;LoongArch" \
+  -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV;WebAssembly;LoongArch;Arm" \
   -DLLVM_INCLUDE_DOCS=OFF \
   -DLLVM_BUILD_TESTS=OFF \
   -DLLVM_BUILD_LLVM_DYLIB=OFF \
@@ -92,8 +92,32 @@ cmake --build . --config MinSizeRel
 DESTDIR=destdir cmake --install . --strip --config MinSizeRel
 
 
-# move usr/bin/* to bin/ or llvm-config will be broken
-if [ ! -d destdir/bin ];then
- mkdir destdir/bin
-fi
-mv destdir/usr/bin/* destdir/bin/
+# Run `cmake` to configure the project.
+cmake \
+  -G Ninja \
+  -DCMAKE_BUILD_TYPE=MinSizeRel \
+  -DLLVM_ENABLE_RUNTIMES=compiler-rt \
+  -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
+  -DCOMPILER_RT_BUILD_BUILTINS=OFF \
+  -DCMAKE_INSTALL_PREFIX="/" \
+  -DLLVM_INCLUDE_DOCS=OFF \
+  -DLLVM_BUILD_TESTS=OFF \
+  -DLLVM_BUILD_LLVM_DYLIB=OFF \
+  -DLLVM_ENABLE_ASSERTIONS=OFF \
+  -DLLVM_INCLUDE_EXAMPLES=OFF \
+  -DLLVM_INCLUDE_TESTS=OFF \
+  -DLLVM_ENABLE_LIBXML2=0 \
+  -DLLVM_ENABLE_DOXYGEN=OFF \
+  -DLLVM_INCLUDE_BENCHMARKS=OFF \
+  -DLLVM_INCLUDE_TOOLS=ON \
+  -DLLVM_INCLUDE_UTILS=OFF \
+  -DLLVM_ENABLE_CURL=OFF \
+  -DLLVM_ENABLE_BINDINGS=OFF \
+  -DLLVM_OPTIMIZED_TABLEGEN=ON \
+  "${CROSS_COMPILE}" \
+  "${CMAKE_ARGUMENTS}" \
+  ../llvm
+
+# Showtime!
+cmake --build . --config MinSizeRel
+DESTDIR=destdir cmake --install . --strip --config MinSizeRel
