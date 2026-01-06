@@ -91,13 +91,11 @@ cmake \
 cmake --build . --config MinSizeRel
 DESTDIR=destdir cmake --install . --strip --config MinSizeRel
 
-
 # Run `cmake` to configure the project.
 cmake \
   -G Ninja \
   -DCMAKE_BUILD_TYPE=MinSizeRel \
   -DLLVM_ENABLE_RUNTIMES=compiler-rt \
-  -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
   -DCOMPILER_RT_BUILD_BUILTINS=OFF \
   -DLLVM_ENABLE_PROJECTS="compiler-rt" \
   -DCMAKE_INSTALL_PREFIX="/" \
