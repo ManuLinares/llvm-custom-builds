@@ -117,6 +117,8 @@ cmake \
   "${CMAKE_ARGUMENTS}" \
   ../llvm
 
-# Showtime!
-cmake --build . --config MinSizeRel
-DESTDIR=destdir cmake --install . --strip --config MinSizeRel
+# Only build on macos
+if [[ "${OSTYPE}" == darwin* ]]; then
+	cmake --build . --config MinSizeRel
+	DESTDIR=destdir cmake --install . --strip --config MinSizeRel
+fi
