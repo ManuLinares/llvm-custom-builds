@@ -1,8 +1,21 @@
 $LLVM_VERSION = $args[0]
 $LLVM_REPO_URL = $args[1]
+$TARGET_BUILD_TYPE = $args[2]
 
 if ([string]::IsNullOrEmpty($LLVM_REPO_URL)) {
     $LLVM_REPO_URL = "https://github.com/llvm/llvm-project.git"
+}
+
+if ([string]::IsNullOrEmpty($TARGET_BUILD_TYPE)) {
+    $TARGET_BUILD_TYPE = "Release"
+}
+
+$BUILD_TYPE = "Release"
+$ENABLE_ASSERTIONS = "OFF"
+
+if ($TARGET_BUILD_TYPE -eq "Debug") {
+    $BUILD_TYPE = "RelWithDebInfo"
+    $ENABLE_ASSERTIONS = "ON"
 }
 
 if ([string]::IsNullOrEmpty($LLVM_VERSION)) {
@@ -17,20 +30,51 @@ if ([string]::IsNullOrEmpty($LLVM_VERSION)) {
 
 # Clone the LLVM project.
 if (-not (Test-Path -Path "llvm-project" -PathType Container)) {
-	git clone -b "release/$LLVM_VERSION" --single-branch --depth=1 "$LLVM_REPO_URL" llvm-project
+    $LLVM_REF = "release/$LLVM_VERSION"
+    git clone -b $LLVM_REF --single-branch --depth=1 "$LLVM_REPO_URL" llvm-project
+    if (-not $?) {
+        $LLVM_REF = "llvmorg-$LLVM_VERSION"
+        git clone -b $LLVM_REF --single-branch --depth=1 "$LLVM_REPO_URL" llvm-project
+    }
+    if (-not $?) {
+        Write-Error "Error: Could not find branch 'release/$LLVM_VERSION' or tag 'llvmorg-$LLVM_VERSION'"
+        exit 1
+    }
+} else {
+    # If it already exists, we need to determine what the ref was or just try to update
+    # For CI, it usually won't exist yet, but for local testing:
+    $LLVM_REF = "release/$LLVM_VERSION" # Default
 }
 
 Set-Location llvm-project
 git fetch origin
-git checkout "release/$LLVM_VERSION"
-git reset --hard origin/"release/$LLVM_VERSION"
+git checkout "$LLVM_REF"
+git reset --hard "$LLVM_REF"
+# Apply pdb-patch (Windows-only, only for non-Release builds)
+if ($TARGET_BUILD_TYPE -eq "Debug") {
+    $AddLLVM = "llvm/cmake/modules/AddLLVM.cmake"
+    $LiteralPatch = @"
 
-# Create a directory to build the project.
-New-Item -Path "build" -Force -ItemType "directory"
-Set-Location build
+	get_target_property(type `${name} TYPE)
+	if(`${type} STREQUAL "STATIC_LIBRARY")
+		set(pdb_dir `${CMAKE_CURRENT_BINARY_DIR}/pdb)
+		set_target_properties(
+			`${name}
+			PROPERTIES
+			COMPILE_PDB_NAME_DEBUG `${name}
+			COMPILE_PDB_OUTPUT_DIRECTORY_DEBUG `${pdb_dir}
+			)
+		install(
+			FILES `${pdb_dir}/`${name}.pdb
+			CONFIGURATIONS Debug
+			DESTINATION lib`${LLVM_LIBDIR_SUFFIX}
+			OPTIONAL
+			)
+	endif()
 
-# Create a directory to receive the complete installation.
-New-Item -Path "install" -Force -ItemType "directory"
+"@
+    (Get-Content $AddLLVM) -replace 'endmacro\s*\(add_llvm_library', ($LiteralPatch + "`nendmacro(add_llvm_library") | Set-Content $AddLLVM
+}
 
 # Adjust compilation based on the OS.
 $CMAKE_ARGUMENTS = ""
@@ -38,16 +82,19 @@ $CMAKE_ARGUMENTS = ""
 # Adjust cross compilation
 $CROSS_COMPILE = ""
 
-# Run `cmake` to configure the project, using MSVC.
-$CMAKE_CXX_COMPILER="cl.exe"
-$CMAKE_C_COMPILER="cl.exe"
-$CMAKE_LINKER_TYPE="MSVC"
+# PHASE 1: Build LLVM + LLD
+New-Item -Path "build" -Force -ItemType "directory"
+Set-Location build
+New-Item -Path "build_llvm" -Force -ItemType "directory"
+Set-Location build_llvm
 
 cmake `
   -G "Ninja" `
-  -DCMAKE_BUILD_TYPE=MinSizeRel `
-  -DCMAKE_INSTALL_PREFIX=destdir `
-  -DLLVM_ENABLE_PROJECTS="clang;lld" `
+  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" `
+  -DCMAKE_INSTALL_PREFIX="../destdir" `
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+  -DLLVM_ENABLE_PROJECTS="lld" `
+  -DLLVM_ENABLE_RUNTIMES="" `
   -DLLVM_ENABLE_TERMINFO=OFF `
   -DLLVM_ENABLE_ZLIB=OFF `
   -DLLVM_ENABLE_LIBXML2=OFF `
@@ -58,17 +105,38 @@ cmake `
   -DLLVM_INCLUDE_TOOLS=ON `
   -DLLVM_INCLUDE_UTILS=OFF `
   -DLLVM_OPTIMIZED_TABLEGEN=ON `
+  -DLLVM_ENABLE_ASSERTIONS="${ENABLE_ASSERTIONS}" `
   -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV;WebAssembly;LoongArch" `
   $CROSS_COMPILE `
   $CMAKE_ARGUMENTS `
-  ../llvm
+  ../../llvm
 
-# Showtime!
-cmake --build . --config Release
+cmake --build . --config "${BUILD_TYPE}"
+cmake --install . --config "${BUILD_TYPE}"
 
-# Not using DESTDIR here, quote from
-# https://cmake.org/cmake/help/latest/envvar/DESTDIR.html
-# > `DESTDIR` may not be used on Windows because installation prefix
-# > usually contains a drive letter like in `C:/Program Files` which cannot
-# > be prepended with some other prefix.
-cmake --install . --strip --config Release
+# PHASE 2: Build compiler-rt
+# Get host triple
+$HOST_TRIPLE = (./bin/llvm-config.exe --host-target)
+
+Set-Location ..
+New-Item -Path "build_rt" -Force -ItemType "directory"
+Set-Location build_rt
+
+cmake `
+  -G "Ninja" `
+  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" `
+  -DCMAKE_INSTALL_PREFIX="../destdir" `
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+  -DLLVM_CMAKE_DIR="$(Get-Item ../build_llvm/lib/cmake/llvm).FullName" `
+  -DCMAKE_C_COMPILER_TARGET="$HOST_TRIPLE" `
+  -DCOMPILER_RT_BUILD_BUILTINS=ON `
+  -DCOMPILER_RT_BUILD_SANITIZERS=ON `
+  -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON `
+  $CROSS_COMPILE `
+  $CMAKE_ARGUMENTS `
+  ../../compiler-rt
+
+cmake --build . --config "${BUILD_TYPE}"
+cmake --install . --config "${BUILD_TYPE}"
+
+Set-Location ../..

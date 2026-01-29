@@ -1,278 +1,45 @@
-<div align="center">
-  <a href="https://wasmer.io" target="_blank" rel="noopener noreferrer">
-    <img width="300" src="https://raw.githubusercontent.com/wasmerio/wasmer/master/assets/logo.png" alt="Wasmer logo">
-  </a>
-  
-  <h1>LLVM Custom Builds</h1>
-  
-  <p>
-    <a href="https://github.com/wasmerio/llvm-custom-builds/actions?query=workflow%3A%22Build%22">
-      <img src="https://github.com/wasmerio/llvm-custom-builds/workflows/Build/badge.svg" alt="Build Status">
-    </a>
-    <a href="https://github.com/wasmerio/llvm-custom-builds/blob/master/LICENSE">
-      <img src="https://img.shields.io/github/license/wasmerio/llvm-custom-builds.svg" alt="License">
-    </a>
-  </p>
+# C3 Custom LLVM Builds
 
-  <h3>
-    <a href="https://wasmer.io/">Website</a>
-    <span> • </span>
-    <a href="https://docs.wasmer.io">Docs</a>
-    <span> • </span>
-    <a href="https://slack.wasmer.io/">Slack Channel</a>
-  </h3>
+This repository contains scripts and GitHub Actions workflows for producing custom, lean LLVM builds specifically tailored for the [C3 Programming Language](https://c3-lang.org/) compiler ([c3c](https://github.com/c3lang/c3c)).
 
-</div>
+## Overview
 
-<hr/>
+The goal of this project is to provide pre-built LLVM binaries that are:
+- **Lean**: Disables unnecessary features like Clang, documentation, and tests to reduce size.
+- **Complete for C3**: Includes `lld` (linker) and `compiler-rt` (builtins and sanitizers) for all supported platforms.
+- **Consistent**: Unified build process across Windows, macOS, and Linux.
+- **Developer Friendly**: Provides both optimized `Release` builds and `Debug` builds (including PDBs on Windows) for easier compiler debugging.
 
-> Go along your path, this is a dangerous place.
+## Supported Platforms
 
-This repository contains a small `build.sh` (or `build.ps1` for Windows 
-PowerShell) script that builds LLVM. The version of LLVM is defined in the CI script.
-The build is run by [Github
-Actions](https://github.com/wasmerio/llvm-custom-builds/actions) on 4
-platforms: Linux (Ubuntu, amd64 and aarch64), Darwin (macOS), and Windows.
-Builds are attached to [Github releases as
-assets](https://github.com/wasmerio/llvm-custom-builds/releases).
+We produce artifacts for the following architectures and operating systems:
 
-## Prebuilds
+| OS | Architecture | Build Types |
+|----|--------------|-------------|
+| **Linux** | `amd64`, `aarch64`, `riscv64` | Release, Debug |
+| **macOS** | `amd64` (Intel), `arm64` (Apple Silicon) | Release, Debug |
+| **Windows** | `amd64` (x64) | Release, Debug |
 
-<table>
-  <thead>
-    <tr>
-      <th>LLVM version</th>
-      <th>Architecture</th>
-      <th>Platform</th>
-      <th>Package</th>
-    </tr>
-  </thead>
-  <tbody>
-  <tr>
-      <td rowspan="6">21</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-darwin-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-linux-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-windows-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="2">aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-linux-aarch64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-darwin-aarch64.tar.xz">download</a></td>
-    </tr>
-      </tr>
-      <td>riscv64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/21.x/llvm-linux-riscv64.tar.xz">download</a></td>
-      <tr>
-    <tr>
-    <tr>
-      <td rowspan="6">18</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-darwin-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-linux-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-windows-amd64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="2">aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-linux-aarch64.tar.xz">download</a></td>
-    </tr>
-    <tr>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-darwin-aarch64.tar.xz">download</a></td>
-    </tr>
-      </tr>
-      <td>riscv64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/18.x/llvm-linux-riscv64.tar.xz">download</a></td>
-      <tr>
-    <tr>
-      <td rowspan="5">16</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/16.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/16.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/16.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/16.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>riscv64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/16.x/linux-riscv64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="5">15</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/15.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/15.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/15.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/15.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>riscv64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/15.x/linux-riscv64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="4">14</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/14.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/14.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/14.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/14.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="4">13</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/13.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/13.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/13.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/13.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="4">12</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/12.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/12.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/12.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/12.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="4">11</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/11.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/11.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/11.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch64</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/11.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td rowspan="4">10</td>
-      <td rowspan="3">amd64</td>
-      <td>Darwin</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/10.x/darwin-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/10.x/linux-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>Windows</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/10.x/windows-amd64.tar.gz">download</a></td>
-    </tr>
-    <tr>
-      <td>aarch</td>
-      <td>Linux</td>
-      <td><a href="https://github.com/wasmerio/llvm-custom-builds/releases/download/10.x/linux-aarch64.tar.gz">download</a></td>
-    </tr>
-  </tbody>
-</table>
+## Configuration Details
 
-## LLVM configuration
+These builds are configured with the following key settings:
+- **Projects**: `lld` enabled.
+- **Runtimes**: `compiler-rt` (Builtins, ASan, TSan, UBSan).
+- **Targets**: `X86`, `AArch64`, `RISCV`, `WebAssembly`, `LoongArch`, `ARM`.
+- **Optimization**: `RelWithDebInfo` used for Debug builds to keep them usable while retaining symbols.
+- **Strip**: Debug symbols are retained in Debug builds; Release builds are stripped.
+- **Static Linking**: Designed to be statically linked into the `c3c` binary where applicable.
 
-The following configuration is the one used for all actual prebuilds:
+## CI & Releases
 
-| Options | Value |
-|-|-|
-| `clang` | enabled |
-| `docs` | not included |
-| `examples` | not included |
-| `go_tests` | not included |
-| `lld` | enabled |
-| `optimized_tablegen` | enabled |
-| `targets_to_build` | `X86` + `AArch64` |
-| `terminfo` | disabled |
-| `tests` | not included |
-| `tools` | included |
-| `utils` | not included |
-| `zlib` | disabled |
+Artifacts are automatically built and published to GitHub Releases whenever changes are pushed to the `master` or `dev` branches.
+
+The version used is currently pinned to **LLVM 21.x**.
+
+## Attribution
+
+This project is a fork and evolution of the excellent [wasmerio/llvm-custom-builds](https://github.com/wasmerio/llvm-custom-builds) repository. We thank the Wasmer team for providing such a solid foundation for automated LLVM builds.
 
 # License
 
-The entire project is under the MIT License. Please read [the `LICENSE` file][license].
-
-
-[license]: https://github.com/wasmerio/llvm-custom-builds/blob/master/LICENSE
+The scripts in this repository are licensed under the MIT License. LLVM itself is licensed under the Apache License v2.0 with LLVM Exceptions.
