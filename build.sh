@@ -111,15 +111,26 @@ cmake \
   ../llvm
 
 cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
-DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 
 # Save some disk space
 echo "Initial disk usage:"
 df -h
 find lib -name "*.o" -type f -delete || true
-find lib -name "*.a" -type f -delete || true # I maybe should remove this for the next test
+#find lib -name "*.a" -type f -delete || true # I maybe should remove this for the next test
 find . -name "*.dwo" -type f -delete || true
-echo "Final disk usage:"
+echo "Before install disk usage:"
+df -h
+
+DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
+echo "After install disk usage:"
+df -h
+
+echo "Cleaning up Phase 1 to make room for Phase 2..."
+find . -name "*.o" -type f -delete || true
+find . -name "*.a" -type f -delete || true
+find . -name "*.dwo" -type f -delete || true
+# rm -f bin/lld bin/ld.lld bin/wasm-ld
+echo "Disk usage before Phase 2:"
 df -h
 
 # -- PHASE 2: Build compiler-rt (Builtins & Sanitizers) --

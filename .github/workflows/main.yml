@@ -109,7 +109,7 @@ jobs:
         if: startsWith(matrix.target.id, 'linux-')
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 10
+          swap-size-gb: 8
 
       - name: Install `ninja` (Linux)
         if: startsWith(matrix.target.id, 'linux-')
