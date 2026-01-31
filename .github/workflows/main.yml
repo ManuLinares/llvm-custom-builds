@@ -109,7 +109,7 @@ jobs:
         if: startsWith(matrix.target.id, 'linux-')
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 8
+          swap-size-gb: 5
 
       - name: Install `ninja` (Linux)
         if: startsWith(matrix.target.id, 'linux-')
@@ -148,6 +148,7 @@ jobs:
           ASSET_SUFFIX=""
           if [ "${{ matrix.llvm_build_type }}" == "Debug" ]; then ASSET_SUFFIX="-dbg"; fi
           tar --directory llvm-project/build/destdir --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/llvm${ASSET_SUFFIX}.tar.xz .
+          tar --directory llvm-project/build/destdir --create --gzip --verbose ${{ matrix.target.tar_extra_args }} --file dist/llvm${ASSET_SUFFIX}.tar.gz .
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
@@ -179,9 +180,9 @@ jobs:
             suffix=""
             if [ "$type" == "Debug" ]; then suffix="-dbg"; fi
 
-            FILE=$(find "$dir" -name "*.tar.xz" | head -n 1)
+            FILE=$(find "$dir" -name "*.tar.gz" | head -n 1)
             if [ -n "$FILE" ]; then
-              cp "$FILE" "release_dist/llvm-${id}${suffix}.tar.xz"
+              cp "$FILE" "release_dist/llvm-${id}${suffix}.tar.gz"
             fi
           done
 
@@ -192,7 +193,7 @@ jobs:
         with:
           name: LLVM ${{ env.LLVM_VERSION }}
           tag_name: ${{ github.ref_name }}
-          files: release_dist/*.tar.xz
+          files: release_dist/*.tar.gz
           allow_override: true
           draft: false
           prerelease: false

@@ -115,35 +115,37 @@ cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 # Save some disk space
 echo "Initial disk usage:"
 df -h
-find lib -name "*.o" -type f -delete || true
+find . -name "*.o" -type f -delete || true
 #find lib -name "*.a" -type f -delete || true # I maybe should remove this for the next test
 find . -name "*.dwo" -type f -delete || true
 echo "Before install disk usage:"
 df -h
 
-DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
+DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}"
 echo "After install disk usage:"
 df -h
 
 echo "Cleaning up Phase 1 to make room for Phase 2..."
-find . -name "*.o" -type f -delete || true
-find . -name "*.a" -type f -delete || true
-find . -name "*.dwo" -type f -delete || true
-# rm -f bin/lld bin/ld.lld bin/wasm-ld
+find . -maxdepth 1 ! -name 'destdir' ! -name 'bin' ! -name 'lib' ! -name '.' -exec rm -rf {} + || true
+find ./lib -maxdepth 1 ! -name 'cmake' ! -name '.' -exec rm -rf {} + || true
+
 echo "Disk usage before Phase 2:"
 df -h
 
 # -- PHASE 2: Build compiler-rt (Builtins & Sanitizers) --
 # We need the host triple for standalone compiler-rt build. 
 # Skip running llvm-config if cross-compiling to avoid Exec format errors.
-HOST_TRIPLE=${TARGET_TRIPLE:-$(./bin/llvm-config --host-target)}
+#HOST_TRIPLE=${TARGET_TRIPLE:-$(./bin/llvm-config --host-target)}
+HOST_TRIPLE=${TARGET_TRIPLE:-$(../build/destdir/bin/llvm-config --host-target)}
+
+  #-DLLVM_CMAKE_DIR="$(pwd)/../build/lib/cmake/llvm" \
 
 cd ../build_rt
 cmake \
   -G Ninja \
   -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
   -DCMAKE_INSTALL_PREFIX="/" \
-  -DLLVM_CMAKE_DIR="$(pwd)/../build/lib/cmake/llvm" \
+  -DLLVM_CMAKE_DIR="$(pwd)/../build/destdir/lib/cmake/llvm" \
   -DCMAKE_C_COMPILER_TARGET="${HOST_TRIPLE}" \
   -DCOMPILER_RT_BUILD_BUILTINS=ON \
   -DCOMPILER_RT_BUILD_SANITIZERS=ON \
@@ -164,6 +166,6 @@ cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 df -h
 
 # Install to the same destdir as LLVM
-DESTDIR=../build/destdir cmake --install . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
+DESTDIR=../build/destdir cmake --install . --config "${BUILD_TYPE}"
 
 df -h
