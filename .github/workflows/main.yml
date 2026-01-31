@@ -147,7 +147,7 @@ jobs:
           mkdir -p dist
           ASSET_SUFFIX=""
           if [ "${{ matrix.llvm_build_type }}" == "Debug" ]; then ASSET_SUFFIX="-dbg"; fi
-          tar --directory llvm-project/build/destdir --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/llvm${ASSET_SUFFIX}.tar.xz .
+          #tar --directory llvm-project/build/destdir --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/llvm${ASSET_SUFFIX}.tar.xz .
           tar --directory llvm-project/build/destdir --create --gzip --verbose ${{ matrix.target.tar_extra_args }} --file dist/llvm${ASSET_SUFFIX}.tar.gz .
 
       - name: Upload Artifacts

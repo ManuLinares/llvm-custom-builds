@@ -127,16 +127,35 @@ df -h
 
 echo "Cleaning up Phase 1 to make room for Phase 2..."
 find . -maxdepth 1 ! -name 'destdir' ! -name 'bin' ! -name 'lib' ! -name '.' -exec rm -rf {} + || true
-find ./lib -maxdepth 1 ! -name 'cmake' ! -name '.' -exec rm -rf {} + || true
 
 echo "Disk usage before Phase 2:"
 df -h
 
 # -- PHASE 2: Build compiler-rt (Builtins & Sanitizers) --
+
+# --- AUTO-DISCOVERY ---
+# Locate llvm-config inside the destdir (it might be in /bin or /usr/bin)
+LLVM_CONFIG_PATH=$(find "$(pwd)/destdir" -name llvm-config -type f | head -n 1)
+if [[ -z "$LLVM_CONFIG_PATH" ]]; then
+  echo "Error: Could not find llvm-config in destdir"
+  exit 1
+fi
+echo "Found llvm-config at: $LLVM_CONFIG_PATH"
+
+# Locate the LLVM CMake directory inside destdir
+LLVM_CMAKE_DIR_PATH=$(find "$(pwd)/destdir" -name LLVMConfig.cmake -type f -exec dirname {} + | head -n 1)
+if [[ -z "$LLVM_CMAKE_DIR_PATH" ]]; then
+  echo "Error: Could not find LLVMConfig.cmake in destdir"
+  exit 1
+fi
+echo "Found LLVM CMake dir at: $LLVM_CMAKE_DIR_PATH"
+
 # We need the host triple for standalone compiler-rt build. 
 # Skip running llvm-config if cross-compiling to avoid Exec format errors.
 #HOST_TRIPLE=${TARGET_TRIPLE:-$(./bin/llvm-config --host-target)}
-HOST_TRIPLE=${TARGET_TRIPLE:-$(../build/destdir/bin/llvm-config --host-target)}
+#HOST_TRIPLE=${TARGET_TRIPLE:-$(../build/destdir/bin/llvm-config --host-target)}
+HOST_TRIPLE=${TARGET_TRIPLE:-$($LLVM_CONFIG_PATH --host-target)}
+echo "Host Triple: $HOST_TRIPLE"
 
   #-DLLVM_CMAKE_DIR="$(pwd)/../build/lib/cmake/llvm" \
 
@@ -145,7 +164,7 @@ cmake \
   -G Ninja \
   -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
   -DCMAKE_INSTALL_PREFIX="/" \
-  -DLLVM_CMAKE_DIR="$(pwd)/../build/destdir/lib/cmake/llvm" \
+  -DLLVM_CMAKE_DIR="$LLVM_CMAKE_DIR_PATH" \
   -DCMAKE_C_COMPILER_TARGET="${HOST_TRIPLE}" \
   -DCOMPILER_RT_BUILD_BUILTINS=ON \
   -DCOMPILER_RT_BUILD_SANITIZERS=ON \
@@ -159,13 +178,16 @@ cmake \
   ${CMAKE_ARGUMENTS} \
   ../compiler-rt
 
+echo "Building compiler-rt..."
 df -h
 
 cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 
+echo "Installing compiler-rt..."
 df -h
 
 # Install to the same destdir as LLVM
 DESTDIR=../build/destdir cmake --install . --config "${BUILD_TYPE}"
 
+echo "Final Disk Usage:"
 df -h
