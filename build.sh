@@ -76,6 +76,8 @@ if [[ "$BUILD_TYPE" == "Debug" ]]; then
   fi
 fi
 
+df -h
+
 # -- PHASE 1: Build LLVM + LLD --
 cd build
 cmake \
@@ -111,12 +113,13 @@ cmake \
 cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 
-# # Save some disk space
-# echo "Initial disk usage:"
-# df -h
-# find lib -name "*.o" -type f -delete || true
-# find lib -name "*.a" -type f -delete || true
-# echo "Final disk usage:"
+# Save some disk space
+echo "Initial disk usage:"
+df -h
+find lib -name "*.o" -type f -delete || true
+find lib -name "*.a" -type f -delete || true # I maybe should remove this for the next test
+find . -name "*.dwo" -type f -delete || true
+echo "Final disk usage:"
 df -h
 
 # -- PHASE 2: Build compiler-rt (Builtins & Sanitizers) --

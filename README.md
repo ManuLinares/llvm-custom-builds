@@ -16,7 +16,7 @@ We produce artifacts for the following architectures and operating systems:
 
 | OS | Architecture | Build Types |
 |----|--------------|-------------|
-| **Linux** | `amd64`, `aarch64`, `riscv64` | Release, Debug |
+| **Linux** | `amd64`, `aarch64` | Release, Debug |
 | **macOS** | `amd64` (Intel), `arm64` (Apple Silicon) | Release, Debug |
 | **Windows** | `amd64` (x64) | Release, Debug |
 
