@@ -179,6 +179,5 @@ jobs:
           name: LLVM ${{ env.LLVM_VERSION }}
           tag_name: ${{ github.ref_name }}
           files: release_dist/*.tar.gz
-          allow_override: true
           draft: false
           prerelease: false
