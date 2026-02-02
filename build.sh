@@ -92,7 +92,8 @@ cmake \
   -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV;WebAssembly;LoongArch;ARM" \
   -DLLVM_INCLUDE_DOCS=OFF \
   -DLLVM_BUILD_TESTS=OFF \
-  -DLLVM_BUILD_LLVM_DYLIB=OFF \
+  -DLLVM_BUILD_LLVM_DYLIB=ON \
+  -DLLVM_LINK_LLVM_DYLIB=ON \
   -DLLVM_ENABLE_ASSERTIONS="${ENABLE_ASSERTIONS}" \
   -DLLVM_INCLUDE_EXAMPLES=OFF \
   -DLLVM_INCLUDE_TESTS=OFF \
@@ -152,6 +153,14 @@ echo "Found LLVM CMake dir at: $LLVM_CMAKE_DIR_PATH"
 
 # We need the host triple for standalone compiler-rt build. 
 # Skip running llvm-config if cross-compiling to avoid Exec format errors.
+LLVM_LIB_DIR=$(find "$(pwd)/destdir" -name "lib" -type d | head -n 1)
+
+# Tell the OS where to find libLLVM.so so llvm-config can run
+if [[ "${OSTYPE}" == linux* ]]; then
+  export LD_LIBRARY_PATH="$LLVM_LIB_DIR:$LD_LIBRARY_PATH"
+elif [[ "${OSTYPE}" == darwin* ]]; then
+  export DYLD_LIBRARY_PATH="$LLVM_LIB_DIR:$DYLD_LIBRARY_PATH"
+fi
 #HOST_TRIPLE=${TARGET_TRIPLE:-$(./bin/llvm-config --host-target)}
 #HOST_TRIPLE=${TARGET_TRIPLE:-$(../build/destdir/bin/llvm-config --host-target)}
 HOST_TRIPLE=${TARGET_TRIPLE:-$($LLVM_CONFIG_PATH --host-target)}
