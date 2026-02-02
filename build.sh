@@ -67,13 +67,13 @@ if [[ "$BUILD_TYPE" == "Debug" ]]; then
   BUILD_TYPE="RelWithDebInfo"
   ENABLE_ASSERTIONS="ON"
 
-  if [[ "${OSTYPE}" == linux* ]]; then
-    # Grouped Linux-specific Debug optimizations to save memory on CI
-    CMAKE_ARGUMENTS="-DLLVM_USE_SPLIT_DWARF=ON"
-    #OPTIMIZED_TABLEGEN="OFF"
-    PARALLEL_LINK_FLAGS="-DLLVM_PARALLEL_LINK_JOBS=2"
-    BUILD_PARALLEL_FLAGS="--parallel 2"
-  fi
+  # if [[ "${OSTYPE}" == linux* ]]; then
+  #   # Grouped Linux-specific Debug optimizations to save memory on CI
+  #   CMAKE_ARGUMENTS="-DLLVM_USE_SPLIT_DWARF=ON"
+  #   #OPTIMIZED_TABLEGEN="OFF"
+  #   PARALLEL_LINK_FLAGS="-DLLVM_PARALLEL_LINK_JOBS=2"
+  #   BUILD_PARALLEL_FLAGS="--parallel 2"
+  # fi
 fi
 
 df -h
@@ -117,7 +117,6 @@ cmake --build . --config "${BUILD_TYPE}" ${BUILD_PARALLEL_FLAGS}
 echo "Initial disk usage:"
 df -h
 find . -name "*.o" -type f -delete || true
-#find lib -name "*.a" -type f -delete || true # I maybe should remove this for the next test
 find . -name "*.dwo" -type f -delete || true
 echo "Before install disk usage:"
 df -h
@@ -155,7 +154,7 @@ echo "Found LLVM CMake dir at: $LLVM_CMAKE_DIR_PATH"
 # Skip running llvm-config if cross-compiling to avoid Exec format errors.
 LLVM_LIB_DIR=$(find "$(pwd)/destdir" -name "lib" -type d | head -n 1)
 
-# Tell the OS where to find libLLVM.so so llvm-config can run
+# Tell the OS where to find libLLVM.so so llvm-config can f... run
 if [[ "${OSTYPE}" == linux* ]]; then
   export LD_LIBRARY_PATH="$LLVM_LIB_DIR:$LD_LIBRARY_PATH"
 elif [[ "${OSTYPE}" == darwin* ]]; then
@@ -165,8 +164,6 @@ fi
 #HOST_TRIPLE=${TARGET_TRIPLE:-$(../build/destdir/bin/llvm-config --host-target)}
 HOST_TRIPLE=${TARGET_TRIPLE:-$($LLVM_CONFIG_PATH --host-target)}
 echo "Host Triple: $HOST_TRIPLE"
-
-  #-DLLVM_CMAKE_DIR="$(pwd)/../build/lib/cmake/llvm" \
 
 cd ../build_rt
 cmake \

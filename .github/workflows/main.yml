@@ -28,8 +28,8 @@ jobs:
           - id: "linux-aarch64"
             os: "ubuntu-24.04-arm"
 
-          # - id: "linux-riscv64"
-          #   os: "ubuntu-24.04" # TODO: use the second disk in /mnt which has more disk space for building this, otherwise it doesn't have sufficient disk space to complete PHASE 1
+          - id: "linux-riscv64"
+            os: "ubuntu-24.04" # TODO: use the second disk in /mnt which has more disk space for building this, otherwise it doesn't have sufficient disk space to complete PHASE 1
 
           - id: "darwin-amd64"
             os: "macos-15-intel"
@@ -90,21 +90,6 @@ jobs:
           echo "Final disk usage:"
           df -h
 
-      # - name: Free Disk Space - Ubuntu Runners
-      #   if: startsWith(matrix.target.id, 'linux-')
-      #   uses: endersonmenezes/free-disk-space@v3
-      #   with:
-      #     remove_android: true
-      #     remove_dotnet: true
-      #     remove_haskell: true
-      #     remove_tool_cache: true
-      #     remove_packages: "azure-cli google-cloud-cli microsoft-edge-stable google-chrome-stable firefox postgresql* temurin-* mysql* dotnet-sdk-*"
-      #     remove_packages_one_command: true
-      #     remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/local/lib/node_modules /usr/local/share/chromium /usr/local/share/powershell /usr/local/julia /usr/local/aws-cli /usr/local/aws-sam-cli /usr/share/gradle"
-      #     rm_cmd: "rm"
-      #     testing: false
-
-      # Increase Swap Space
       - name: Maximize Swap Space
         if: startsWith(matrix.target.id, 'linux-')
         uses: pierotofy/set-swap-space@master
@@ -115,16 +100,16 @@ jobs:
         if: startsWith(matrix.target.id, 'linux-')
         run: sudo apt-get install ninja-build -y
 
-      # - name: Install cross-compilation tools (RISCV)
-      #   if: matrix.target.id == 'linux-riscv64'
-      #   run: |
-      #     sudo apt-get install gcc-13-riscv64-linux-gnu g++-13-riscv64-linux-gnu \
-      #     gcc-13-multilib binutils-riscv64-linux-gnu libgcc-13-dev-riscv64-cross \
-      #     libstdc++6-riscv64-cross -y
+      - name: Install cross-compilation tools (RISCV)
+        if: matrix.target.id == 'linux-riscv64'
+        run: |
+          sudo apt-get install gcc-13-riscv64-linux-gnu g++-13-riscv64-linux-gnu \
+          gcc-13-multilib binutils-riscv64-linux-gnu libgcc-13-dev-riscv64-cross \
+          libstdc++6-riscv64-cross -y
 
       - name: Install `ninja` (macOS)
         if: startsWith(matrix.target.id, 'darwin-')
-        run: brew install ninja
+        run: command -v ninja >/dev/null || brew install ninja
 
       - name: Setup MSVC (Windows)
         uses: ilammy/msvc-dev-cmd@v1
