@@ -64,7 +64,7 @@ BUILD_PARALLEL_FLAGS=""
 CMAKE_ARGUMENTS=""
 
 if [[ "$BUILD_TYPE" == "Debug" ]]; then
-  BUILD_TYPE="RelWithDebInfo"
+  BUILD_TYPE="Release"
   ENABLE_ASSERTIONS="ON"
 
   # if [[ "${OSTYPE}" == linux* ]]; then
@@ -122,12 +122,11 @@ echo "Before install disk usage:"
 df -h
 
 DESTDIR=destdir cmake --install . --config "${BUILD_TYPE}"
+
 echo "After install disk usage:"
 df -h
-
 echo "Cleaning up Phase 1 to make room for Phase 2..."
 find . -maxdepth 1 ! -name 'destdir' ! -name 'bin' ! -name 'lib' ! -name '.' -exec rm -rf {} + || true
-
 echo "Disk usage before Phase 2:"
 df -h
 

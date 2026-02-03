@@ -16,7 +16,7 @@ We produce artifacts for the following architectures and operating systems:
 
 | OS | Architecture | Build Types |
 |----|--------------|-------------|
-| **Linux** | `amd64`, `aarch64` | Release, Debug |
+| **Linux** | `amd64`, `aarch64`, `riscv64` | Release, Debug |
 | **macOS** | `amd64` (Intel), `arm64` (Apple Silicon) | Release, Debug |
 | **Windows** | `amd64` (x64) | Release, Debug |
 
@@ -24,21 +24,22 @@ We produce artifacts for the following architectures and operating systems:
 
 These builds are configured with the following key settings:
 - **Projects**: `lld` enabled.
-- **Runtimes**: `compiler-rt` (Builtins, ASan, TSan, UBSan).
+- **Runtimes**: `compiler-rt` (Builtins and Sanitizers including ASan/TSan/UBSan where supported).
 - **Targets**: `X86`, `AArch64`, `RISCV`, `WebAssembly`, `LoongArch`, `ARM`.
-- **Optimization**: `RelWithDebInfo` used for Debug builds to keep them usable while retaining symbols.
-- **Strip**: Debug symbols are retained in Debug builds; Release builds are stripped.
+- **Optimization**: `Release` used for Debug builds to keep them usable while retaining assertions.
 - **Static Linking**: Designed to be statically linked into the `c3c` binary where applicable.
+- ~~**Optimization**: `RelWithDebInfo` used for Debug builds to keep them usable while retaining symbols.~~
+- ~~**Strip**: Debug symbols are retained in Debug builds; Release builds are stripped.~~
 
 ## CI & Releases
 
-Artifacts are automatically built and published to GitHub Releases whenever changes are pushed to the `master` or `dev` branches.
+Artifacts are automatically built on every push to the `main` branch, and are published to GitHub Releases whenever a tag matching `llvm_*` is pushed.
 
 The version used is currently pinned to **LLVM 21.x**.
 
 ## Attribution
 
-This project is a fork and evolution of the excellent [wasmerio/llvm-custom-builds](https://github.com/wasmerio/llvm-custom-builds) repository. We thank the Wasmer team for providing such a solid foundation for automated LLVM builds.
+This project is inspired by the excellent [wasmerio/llvm-custom-builds](https://github.com/wasmerio/llvm-custom-builds) repository. We thank the Wasmer team for providing such a solid foundation for automated LLVM builds.
 
 # License
 

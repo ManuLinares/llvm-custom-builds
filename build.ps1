@@ -14,7 +14,7 @@ $BUILD_TYPE = "Release"
 $ENABLE_ASSERTIONS = "OFF"
 
 if ($TARGET_BUILD_TYPE -eq "Debug") {
-    $BUILD_TYPE = "RelWithDebInfo"
+    $BUILD_TYPE = "Release"
     $ENABLE_ASSERTIONS = "ON"
 }
 
